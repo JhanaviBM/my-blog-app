@@ -21,7 +21,7 @@ const CreateABlog = () => {
     dispatch(addBlog(blogData));
     reset();
     setimageDisplay(null);
-     toast.success('Blog post added successfully!');
+    toast.success('Blog post added successfully!');
     reset();
   };
 

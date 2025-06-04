@@ -11,9 +11,9 @@ const blogSlice = createSlice({
       return state.filter((blog, index) => index !== action.payload);
     },
     editBlog: (state, action) => {
-      const { index, newData } = action.payload;
-      state[index] = newData;
-    }
+      const { index, updatedBlog } = action.payload;
+      state[index] = { ...state[index], ...updatedBlog };
+    },
   },
 });
 

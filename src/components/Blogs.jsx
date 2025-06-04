@@ -1,17 +1,33 @@
-import React, { useState } from 'react';
-import { useSelector } from 'react-redux';
+import React, { useState, useEffect } from 'react';
+import { useSelector, useDispatch } from 'react-redux';
 import blogsJson from '../data/blogs.json';
+import { toast } from 'react-toastify';
+import { deleteBlog, editBlog } from '../features/blogSlice';
 
 const Blogs = () => {
   const reduxBlogs = useSelector((state) => state.blogs);
-  const [allBlogs, setAllBlogs] = useState([...reduxBlogs, ...blogsJson]);
+  const [allBlogs, setAllBlogs] = useState([]);
   const [editIndex, setEditIndex] = useState(null);
   const [editData, setEditData] = useState({ title: '', tags: '', description: '' });
+  const dispatch = useDispatch();
 
-  const handleDelete = (indexToDelete) => {
-    const updatedBlogs = allBlogs.filter((_, i) => i !== indexToDelete);
-    setAllBlogs(updatedBlogs);
-  };
+  useEffect(() => {
+    setAllBlogs([...reduxBlogs, ...blogsJson]);
+  }, [reduxBlogs]);
+
+const handleDelete = (index) => {
+  const updatedBlogs = [];
+  for (let i = 0; i < allBlogs.length; i++) {
+    if (i !== index) {
+      updatedBlogs.push(allBlogs[i]);
+    }
+  }
+  setAllBlogs(updatedBlogs);
+  if (index < reduxBlogs.length) {
+    dispatch(deleteBlog(index));
+  }
+  toast.success("Blog deleted successfully!");
+};
 
   const startEdit = (index) => {
     setEditIndex(index);
@@ -27,12 +43,21 @@ const Blogs = () => {
   };
 
   const saveEdit = () => {
-    const updatedBlogs = [...allBlogs];
-    updatedBlogs[editIndex] = {
-      ...updatedBlogs[editIndex],
-      ...editData,
+    const updatedBlog = {
+      title: editData.title,
+      tags: editData.tags,
+      description: editData.description,
     };
-    setAllBlogs(updatedBlogs);
+
+    if (editIndex < reduxBlogs.length) {
+      dispatch(editBlog({ index: editIndex, updatedBlog }));
+    } else {
+      const updatedBlogs = [...allBlogs];
+      updatedBlogs[editIndex] = { ...updatedBlogs[editIndex], ...updatedBlog };
+      setAllBlogs(updatedBlogs);
+    }
+
+    toast.success('Blog post edited successfully!');
     setEditIndex(null);
   };
 
@@ -54,57 +79,27 @@ const Blogs = () => {
               )}
               <div className="p-4 flex flex-col justify-between flex-grow">
                 {editIndex === index ? (
-                  <div>
-                    <input
-                      name="title"
-                      value={editData.title}
-                      onChange={handleEditChange}
-                      className="border rounded p-1 w-full mb-2"
-                    />
-                    <input
-                      name="tags"
-                      value={editData.tags}
-                      onChange={handleEditChange}
-                      className="border rounded p-1 w-full mb-2"
-                    />
-                    <textarea
-                      name="description"
-                      value={editData.description}
-                      onChange={handleEditChange}
-                      className="border rounded p-1 w-full mb-2"
-                    />
-                  </div>
+                  <>
+                    <input name="title" value={editData.title} onChange={handleEditChange} className="border rounded p-1 w-full mb-2" />
+                    <input name="tags" value={editData.tags} onChange={handleEditChange} className="border rounded p-1 w-full mb-2" />
+                    <textarea name="description" value={editData.description} onChange={handleEditChange} className="border rounded p-1 w-full mb-2" />
+                  </>
                 ) : (
-                  <div>
+                  <>
                     <h3 className="text-xl font-semibold text-emerald-800">{blog.title}</h3>
                     <p className="text-sm text-gray-500 mb-2">Tags: {blog.tags}</p>
                     <p className="text-gray-700">{blog.description}</p>
-                  </div>
+                  </>
                 )}
                 <p className="text-sm text-gray-600 mt-2">Date: {blog.date}</p>
               </div>
               <div className="flex justify-end gap-2 p-3">
                 {editIndex === index ? (
-                  <button
-                    onClick={saveEdit}
-                    className="bg-blue-500 text-white text-sm py-1 px-3 rounded hover:bg-blue-600"
-                  >
-                    Save
-                  </button>
+                  <button onClick={saveEdit} className="bg-blue-500 text-white text-sm py-1 px-3 rounded hover:bg-blue-600">Save</button>
                 ) : (
-                  <button
-                    onClick={() => startEdit(index)}
-                    className="bg-yellow-500 text-white text-sm py-1 px-3 rounded hover:bg-yellow-600"
-                  >
-                    Edit
-                  </button>
+                  <button onClick={() => startEdit(index)} className="bg-blue-500 text-white text-sm py-1 px-3 rounded hover:bg-blue-600">Edit</button>
                 )}
-                <button
-                  onClick={() => handleDelete(index)}
-                  className="bg-red-500 text-white text-sm py-1 px-3 rounded hover:bg-red-600"
-                >
-                  Delete
-                </button>
+                <button onClick={() => handleDelete(index)} className="bg-red-500 text-white text-sm py-1 px-3 rounded hover:bg-red-600">Delete</button>
               </div>
             </div>
           ))}
